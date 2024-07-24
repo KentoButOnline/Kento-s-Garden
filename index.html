@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kento's Garden</title>
+    <style>
+        body {
+            font-family: Merriweather, serif;
+            line-height: 1.6;
+            margin: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            background: linear-gradient(to right, #45d190, #e04fb0);
+        }
+        h1 {
+            color: #e04fb0;
+        }
+        p {
+            margin-bottom: 10px;
+        }
+        .intro {
+            font-style: italic;
+            color: #3576de;
+        }
+        .bio, .interests, .music, .guestbook {
+            margin-top: 20px;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #3576de;
+        }
+        .guestbook {
+            border: 15px solid #ba33cc;
+            padding: 20px;
+            background-color: #3596e6;
+        }
+        .guestbook-entry {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-bottom: 5px solid #33cc8a;
+        }
+    </style>
+</head>
+<body>
+    <section class="guestbook">
+        <h2>Guestbook</h2>
+        <form id="guestbook-form">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+            <br><br>
+            <label for="message">Message:</label>
+            <textarea id="message" required></textarea>
+            <br><br>
+            <button type="submit">Submit</button>
+        </form>
+        <div id="guestbook-entries"></div>
+    </section>
+
+    <header>
+        <h1>Kento Ashitono Mukiyashi</h1>
+        <p class="intro">Welcome to my personal webpage!</p>
+    </header>
+
+    <section class="bio">
+        <h2>About Me</h2>
+        <p>Hello, I'm Kento Ashitono Mukiyashi.
+         Just a Half Human, Half Plant Monster who likes torturing myself with fancy plastic and music.
+         I am also making an animatic based off a music album called Pale Machine by bo en.</p>
+        <img src="https://cdn.discordapp.com/avatars/1126678134687805542/da249ef982e200da40df5ddb71f9e666.png" alt="Me. I sure hope I look good here.">
+    </section>
+
+    <section class="interests">
+        <h2>Interests</h2>
+        <p>Rhythm Games Like Parappa The Rapper, Um Jammer Lammy, Guitar Hero/Rock Band, Music, Art, The Wii, ETC.</p>
+    </section>
+
+    <section class="music">
+        <h2>Music I Like</h2>
+        <p>Here are some of my favorite music albums and songs:</p>
+        <ul>
+            <li>Pale Machine by bo en</li>
+            <li>Parappa The Rapper OST</li>
+            <li>Music from the DS, Wii, Wii U, 3DS, other consoles with that vibe.</li>
+            <li>Wii Music (the Game). Don't judge.</li>
+            <li>Um Jammer Lammy OST</li>
+            <li>give me more suggestions!</li>
+        </ul>
+    </section>
+
+    <footer class="footer">
+        <p>Created by Kento Ashitono Mukiyashi. Say hi to me on discord! https://discord.gg/YAunpnCC. &copy; 2024</p>
+    </footer>
+
+    <script>
+        // Function to load entries from the server
+        async function loadEntries() {
+            const response = await fetch('/api/entries');
+            const entries = await response.json();
+            const guestbookEntries = document.getElementById('guestbook-entries');
+            guestbookEntries.innerHTML = '';
+
+            entries.forEach((entry, index) => {
+                const entryDiv = document.createElement('div');
+                entryDiv.classList.add('guestbook-entry');
+                entryDiv.innerHTML = `
+                    <p><strong>${entry.name}</strong>: ${entry.message}</p>
+                    <p><em>${entry.reply || 'No reply yet'}</em></p>
+                    <input type="text" placeholder="Your reply" id="reply-${index}">
+                    <button onclick="saveReply(${index})">Reply</button>
+                `;
+                guestbookEntries.appendChild(entryDiv);
+            });
+        }
+
+        // Function to save a new entry to the server
+        async function saveEntry(entry) {
+            await fetch('/api/entries', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(entry)
+            });
+        }
+
+        // Function to save a reply to the server
+        async function saveReply(index) {
+            const reply = document.getElementById(`reply-${index}`).value;
+            await fetch('/api/reply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ index, reply })
+            });
+            loadEntries();
+        }
+
+        // Handle form submission
+        document.getElementById('guestbook-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const message = document.getElementById('message').value;
+
+            const entry = { name, message, reply: '' };
+            await saveEntry(entry);
+            loadEntries();
+
+            document.getElementById('guestbook-form').reset();
+        });
+
+        // Load entries on page load
+        window.onload = loadEntries;
+    </script>
+</body>
+</html>
